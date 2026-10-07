@@ -37,9 +37,10 @@ function distanceKm(lat, lon) {
 function popup(place) {
   const distance = distanceKm(place.latitude, place.longitude).toFixed(1);
   const rent = place.rent !== null && place.rent !== undefined ? `<span>Rent: €${Number(place.rent).toFixed(2)} / month</span>` : "";
+  const description = place.notes ? `<span class="popup-description">${escapeHtml(place.notes)}</span>` : "";
   const contact = place.contact_person ? `<span>${escapeHtml(place.contact_person)}</span>` : "";
   const link = place.link ? `<a href="${escapeHtml(place.link)}" target="_blank" rel="noopener noreferrer">Open link ↗</a>` : "";
-  return `<div class="popup-content"><strong>${escapeHtml(place.name)}</strong><span>${escapeHtml(place.address)}</span><span>${escapeHtml(place.label)}</span>${rent}${contact}${link}<small>${distance} km straight-line distance to office</small><button class="popup-edit" type="button" data-edit-place="${place.id}">Edit place</button></div>`;
+  return `<div class="popup-content"><strong>${escapeHtml(place.name)}</strong><span>${escapeHtml(place.label)}</span>${description}${rent}${contact}${link}<small>${distance} km straight-line distance to office</small><button class="popup-edit" type="button" data-edit-place="${place.id}">Edit place</button></div>`;
 }
 function renderMap() {
   for (const marker of state.markers.values()) map.removeLayer(marker);

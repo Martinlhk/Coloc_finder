@@ -93,6 +93,7 @@ h1, h2 { margin: 0; font-size: 22px; line-height: 1.2; letter-spacing: 0; }
 .popup-content { min-width: 150px; display: flex; flex-direction: column; align-items: flex-start; gap: 5px; line-height: 1.4; }
 .popup-content strong { color: #26332f; font-size: 13px; font-weight: 700; }
 .popup-content span { color: #5d6964; font-size: 12px; overflow-wrap: anywhere; }
+.popup-content .popup-description { white-space: pre-wrap; }
 .popup-content small { margin-top: 2px; color: #7c8782; font-size: 11px; }
 .popup-content a { color: #176e69; font-size: 11px; text-decoration: underline; overflow-wrap: anywhere; }
 .popup-edit { margin-top: 4px; padding: 5px 9px; border: 1px solid #dce4df; border-radius: 4px; background: #f7f9f7; color: #35443f; font-size: 11px; font-weight: 650; }
