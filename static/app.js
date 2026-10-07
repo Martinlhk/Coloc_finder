@@ -36,9 +36,10 @@ function distanceKm(lat, lon) {
 }
 function popup(place) {
   const distance = distanceKm(place.latitude, place.longitude).toFixed(1);
+  const rent = place.rent !== null && place.rent !== undefined ? `<span>Rent: €${Number(place.rent).toFixed(2)} / month</span>` : "";
   const contact = place.contact_person ? `<span>${escapeHtml(place.contact_person)}</span>` : "";
   const link = place.link ? `<a href="${escapeHtml(place.link)}" target="_blank" rel="noopener noreferrer">Open link ↗</a>` : "";
-  return `<div class="popup-content"><strong>${escapeHtml(place.name)}</strong><span>${escapeHtml(place.address)}</span><span>${escapeHtml(place.label)}</span>${contact}${link}<small>${distance} km straight-line distance to office</small><button class="popup-edit" type="button" data-edit-place="${place.id}">Edit place</button></div>`;
+  return `<div class="popup-content"><strong>${escapeHtml(place.name)}</strong><span>${escapeHtml(place.address)}</span><span>${escapeHtml(place.label)}</span>${rent}${contact}${link}<small>${distance} km straight-line distance to office</small><button class="popup-edit" type="button" data-edit-place="${place.id}">Edit place</button></div>`;
 }
 function renderMap() {
   for (const marker of state.markers.values()) map.removeLayer(marker);
@@ -57,13 +58,19 @@ function renderMap() {
 }
 function renderList() {
   const filter = $("#filter-label").value;
+  const sort = $("#sort-places").value;
   const places = state.places.filter((place) => !filter || String(place.label_id) === filter);
+  places.sort((a, b) => {
+    if (sort === "label") return a.label.localeCompare(b.label) || a.name.localeCompare(b.name);
+    if (sort === "rent") return (a.rent == null) - (b.rent == null) || (a.rent ?? 0) - (b.rent ?? 0) || a.name.localeCompare(b.name);
+    return b.id - a.id;
+  });
   $("#place-count").textContent = `${places.length} ${places.length === 1 ? "place" : "places"}`;
   $("#empty-state").hidden = places.length > 0;
   $("#place-list").innerHTML = places.map((place) => {
     const distance = distanceKm(place.latitude, place.longitude).toFixed(1);
     return `<div class="place-row${state.activeId === place.id ? " active" : ""}" style="--row-color:${place.color}">
-      <button type="button" class="place-row-main" data-place-id="${place.id}"><span class="place-dot"></span><span class="place-copy"><strong>${escapeHtml(place.name)}</strong><small>${escapeHtml(place.address)}</small><span class="place-label">${escapeHtml(place.label)}</span></span><span class="place-distance">${distance} km</span></button>
+      <button type="button" class="place-row-main" data-place-id="${place.id}"><span class="place-dot"></span><span class="place-copy"><strong>${escapeHtml(place.name)}</strong><small>${escapeHtml(place.address)}</small><span class="place-label">${escapeHtml(place.label)}</span>${place.rent != null ? `<span class="place-rent">€${Number(place.rent).toFixed(2)} / mo</span>` : ""}</span><span class="place-distance">${distance} km</span></button>
       <button type="button" class="place-row-edit" data-edit-place="${place.id}">Edit</button></div>`;
   }).join("");
   $("#place-list").querySelectorAll("[data-place-id]").forEach((row) => row.addEventListener("click", () => {
@@ -126,6 +133,7 @@ function openPlaceDialog(place = null) {
   $("#place-name").value = place?.name || "";
   $("#place-address").value = place?.address || "";
   $("#place-notes").value = place?.notes || "";
+  $("#place-rent").value = place?.rent ?? "";
   $("#place-contact").value = place?.contact_person || "";
   $("#place-link").value = place?.link || "";
   if (place) $("#place-label").value = place.label_id;
@@ -177,6 +185,7 @@ map.on("click", (event) => {
 $("#add-mode").addEventListener("click", () => state.addMode ? cancelPlacement() : enableAddMode());
 $("#cancel-mode").addEventListener("click", cancelPlacement);
 $("#filter-label").addEventListener("change", renderList);
+$("#sort-places").addEventListener("change", renderList);
 $("#place-label").addEventListener("change", () => {
   const label = state.labels.find((item) => item.id === Number($("#place-label").value));
   $("#selected-swatch").style.setProperty("--swatch-color", label?.color || state.palette[0]);
@@ -184,7 +193,7 @@ $("#place-label").addEventListener("change", () => {
 $("#place-form").addEventListener("submit", async (event) => {
   event.preventDefault();
   const form = event.currentTarget; const id = form.elements.id.value;
-  const payload = Object.fromEntries(["name", "address", "latitude", "longitude", "notes", "label_id", "contact_person", "link"].map((key) => [key, form.elements[key].value]));
+  const payload = Object.fromEntries(["name", "address", "latitude", "longitude", "notes", "label_id", "contact_person", "link", "rent"].map((key) => [key, form.elements[key].value]));
   try {
     const saved = await api(id ? `/api/places/${id}` : "/api/places", { method: id ? "PUT" : "POST", body: JSON.stringify(payload) });
     $("#place-dialog").close(); state.draftMarker?.remove(); state.draftMarker = null; state.pendingMove = null; state.activeId = saved.id;
@@ -194,7 +203,7 @@ $("#place-form").addEventListener("submit", async (event) => {
 $("#delete-place").addEventListener("click", deletePlace);
 $("#move-place").addEventListener("click", () => {
   const form = $("#place-form");
-  state.pendingMove = Object.fromEntries(["id", "name", "address", "latitude", "longitude", "notes", "label_id", "contact_person", "link"].map((key) => [key, form.elements[key].value]));
+  state.pendingMove = Object.fromEntries(["id", "name", "address", "latitude", "longitude", "notes", "label_id", "contact_person", "link", "rent"].map((key) => [key, form.elements[key].value]));
   state.pendingMove.id = Number(state.pendingMove.id);
   $("#place-dialog").close(); enableAddMode();
 });

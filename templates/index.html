@@ -28,7 +28,7 @@
         <button type="submit" aria-label="Search">Search</button>
       </form>
       <div id="search-results" class="search-results" hidden></div>
-      <div class="list-toolbar"><span id="place-count">0 places</span><select id="filter-label" aria-label="Filter places by label"><option value="">All labels</option></select></div>
+      <div class="list-toolbar"><span id="place-count">0 places</span><select id="filter-label" aria-label="Filter places by label"><option value="">All labels</option></select><select id="sort-places" aria-label="Sort places"><option value="recent">Recently added</option><option value="label">By label</option><option value="rent">Rent: low to high</option></select></div>
       <div id="place-list" class="place-list" aria-live="polite"></div>
       <div id="empty-state" class="empty-state" hidden><span class="empty-pin" aria-hidden="true"></span><strong>Your shortlist starts here</strong><p>Search for a place or click Add place and choose a spot on the map.</p></div>
       <section class="label-legend"><div class="section-rule"></div><div class="legend-heading"><span>LABELS</span><button id="manage-labels-small" class="icon-button" type="button" aria-label="Manage labels" title="Manage labels">•••</button></div><div id="label-list" class="label-list"></div></section>
@@ -47,6 +47,7 @@
       <label class="field-label" for="place-name">Place name</label><input class="field-input" name="name" id="place-name" maxlength="100" required placeholder="e.g. Flat near Flagey">
       <label class="field-label" for="place-address">Address</label><input class="field-input" name="address" id="place-address" maxlength="300" required>
       <label class="field-label" for="place-label">Label <span class="required-note">ONE PER PLACE</span></label><div class="label-select-wrap"><span id="selected-swatch" class="swatch"></span><select class="field-input" name="label_id" id="place-label" required></select></div>
+      <label class="field-label" for="place-rent">Rent <span class="optional-note">EUR / month, optional</span></label><input class="field-input" name="rent" id="place-rent" type="number" min="0" step="0.01" inputmode="decimal" placeholder="e.g. 650">
       <label class="field-label" for="place-contact">Contact person <span class="optional-note">Optional</span></label><input class="field-input" name="contact_person" id="place-contact" maxlength="120" placeholder="Name or contact details">
       <label class="field-label" for="place-link">Link <span class="optional-note">Optional</span></label><input class="field-input" name="link" id="place-link" type="url" maxlength="1000" placeholder="https://…">
       <label class="field-label" for="place-notes">Notes <span class="optional-note">Optional</span></label><textarea class="field-input notes-input" name="notes" id="place-notes" rows="4" maxlength="2000" placeholder="What should you remember about this place?"></textarea>

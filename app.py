@@ -60,6 +60,8 @@ def initialize_db():
         for column in ("contact_person", "link"):
             if column not in columns:
                 db.execute(f"ALTER TABLE places ADD COLUMN {column} TEXT NOT NULL DEFAULT ''")
+        if "rent" not in columns:
+            db.execute("ALTER TABLE places ADD COLUMN rent REAL")
         defaults = [
             ("To visit", PALETTE[0]),
             ("Shortlisted", PALETTE[1]),
@@ -85,6 +87,18 @@ def get_labels():
         return [dict(row) for row in rows]
 
 
+def parse_rent(value):
+    if value is None or str(value).strip() == "":
+        return None
+    try:
+        rent = float(value)
+    except (TypeError, ValueError):
+        raise ValueError("Rent must be a non-negative amount in euros per month.")
+    if not (0 <= rent < float("inf")):
+        raise ValueError("Rent must be a non-negative amount in euros per month.")
+    return rent
+
+
 @app.get("/")
 def index():
     return render_template("index.html")
@@ -104,8 +118,9 @@ def create_place():
     try:
         latitude, longitude = float(data["latitude"]), float(data["longitude"])
         label_id = int(data["label_id"])
+        rent = parse_rent(data.get("rent"))
     except (TypeError, ValueError):
-        return jsonify(error="Choose a valid location and label."), 400
+        return jsonify(error="Choose a valid location and label, and enter a valid rent."), 400
     if not (-90 <= latitude <= 90 and -180 <= longitude <= 180):
         return jsonify(error="Coordinates are outside the valid range."), 400
     link = str(data.get("link", "")).strip()
@@ -115,11 +130,11 @@ def create_place():
         if not db.execute("SELECT 1 FROM labels WHERE id=?", (label_id,)).fetchone():
             return jsonify(error="Choose an existing label."), 400
         cursor = db.execute(
-            """INSERT INTO places (name, address, latitude, longitude, notes, label_id, contact_person, link)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+            """INSERT INTO places (name, address, latitude, longitude, notes, label_id, contact_person, link, rent)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (data["name"].strip(), data["address"].strip(), latitude, longitude,
              str(data.get("notes", "")).strip(), label_id,
-             str(data.get("contact_person", "")).strip(), link),
+             str(data.get("contact_person", "")).strip(), link, rent),
         )
         place_id = cursor.lastrowid
     return jsonify(next(place for place in get_places() if place["id"] == place_id)), 201
@@ -134,8 +149,9 @@ def update_place(place_id):
     try:
         latitude, longitude = float(data["latitude"]), float(data["longitude"])
         label_id = int(data["label_id"])
+        rent = parse_rent(data.get("rent"))
     except (TypeError, ValueError):
-        return jsonify(error="Choose a valid location and label."), 400
+        return jsonify(error="Choose a valid location and label, and enter a valid rent."), 400
     if not (-90 <= latitude <= 90 and -180 <= longitude <= 180):
         return jsonify(error="Coordinates are outside the valid range."), 400
     link = str(data.get("link", "")).strip()
@@ -145,11 +161,11 @@ def update_place(place_id):
         if not db.execute("SELECT 1 FROM labels WHERE id=?", (label_id,)).fetchone():
             return jsonify(error="Choose an existing label."), 400
         cursor = db.execute(
-            """UPDATE places SET name=?, address=?, latitude=?, longitude=?, notes=?, label_id=?, contact_person=?, link=?
+            """UPDATE places SET name=?, address=?, latitude=?, longitude=?, notes=?, label_id=?, contact_person=?, link=?, rent=?
                WHERE id=?""",
             (data["name"].strip(), data["address"].strip(), latitude, longitude,
              str(data.get("notes", "")).strip(), label_id,
-             str(data.get("contact_person", "")).strip(), link, place_id),
+             str(data.get("contact_person", "")).strip(), link, rent, place_id),
         )
         if cursor.rowcount == 0:
             return jsonify(error="Place not found."), 404
