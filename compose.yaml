@@ -1,0 +1,13 @@
+services:
+  coloc-finder:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_PATH: /data/colocations.sqlite3
+    volumes:
+      - coloc-data:/data
+    restart: unless-stopped
+
+volumes:
+  coloc-data:
