@@ -1,5 +1,8 @@
+name: coloc_finder
+
 services:
-  coloc-finder:
+  coloc_finder:
+    image: coloc_finder:latest
     build: .
     ports:
       - "8000:8000"
